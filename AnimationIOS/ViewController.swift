@@ -7,91 +7,172 @@
 
 import UIKit
 import SnapKit
-class ViewController: UIViewController,CAAnimationDelegate {
-    
-    lazy var ant1: UIImageView = {
-       let view = UIImageView()
-        view.image = UIImage(named: "ants")?.rotate(radians: CGFloat.pi)
-        return view
-    }()
-    
-    lazy var ant2: UIImageView = {
-       let view = UIImageView()
-        let image = UIImage(named: "ants")
-        view.image = image
 
+class ViewController: UIViewController, AntOneListenerDelegate, AntTwoListenerDelegate {
+   
+    func startTwoAnt() {
+        hpTowAnt = hpTowAnt - Int.random(in: 0..<20)
+        
+        antTitleTwo.text = String(hpTowAnt)
+        
+        if (hpTowAnt <= 0) {
+            repeatButton.isHidden = false
+            winTitle.text = "One Ant Win"
+        } else {
+            startAnimationHitAntTwo()
+        }
+    }
+    
+    func startOneAnt() {
+        hpOneAnt = hpOneAnt - Int.random(in: 0..<20)
+        
+        antTitleOne.text = String(hpOneAnt)
+        
+        if (hpOneAnt <= 0) {
+            repeatButton.isHidden = false
+            winTitle.text = "Two Ant Win"
+        } else {
+            startAnimationHitAntOne()
+        }
+    }
+    
+    var hpOneAnt = 100
+    var hpTowAnt = 100
+
+    var antOne: UIImageView = {
+        let view = UIImageView()
+        view.backgroundColor = .blue
         return view
     }()
     
-    lazy var animationOne: CABasicAnimation = {
-        let animation = CABasicAnimation(keyPath: "position")
-        animation.fromValue = [200,568 / 2]
-        animation.delegate = self
-        animation.toValue = [100,568 / 2]
-        animation.duration = 3.0
-        animation.delegate = self
-        animation.autoreverses = true
-        return animation
+    var repeatButton: UIButton = {
+        let view = UIButton()
+        view.setTitle("repeat", for: .normal)
+        view.backgroundColor = .black
+        view.isHidden = true
+        view.addTarget(self, action: #selector(clickButton), for: .touchUpInside)
+        view.setTitleColor(.white, for: .normal)
+        return view
     }()
     
-    lazy var animationTwo: CABasicAnimation = {
-        let animation = CABasicAnimation(keyPath: "position")
-        animation.toValue = [200,568 / 2]
-        animation.fromValue = [100,568 / 2]
-        animation.duration = 3.0
-        animation.autoreverses = true
-        return animation
+    lazy var antOneListener: AntOneListener = {
+        return AntOneListener(delegate: self)
     }()
+    
+    lazy var antTwoListener: AntTwoListener = {
+        return AntTwoListener(delegate: self)
+    }()
+    
+    var antTitleOne: UILabel = {
+        let view = UILabel()
+        view.text = "100"
+        return view
+    }()
+    
+    var antTwo: UIImageView = {
+        let view = UIImageView()
+        view.backgroundColor = .red
+        return view
+    }()
+    
+    var antTitleTwo: UILabel = {
+        let view = UILabel()
+        view.text = "100"
+        return view
+    }()
+    
+    var winTitle: UILabel = {
+        return UILabel()
+    }()
+    
+    @objc func clickButton(view: UIButton) {
+        repeatButton.isHidden = true
+        antTitleOne.text = "100"
+        antTitleTwo.text = "100"
+        hpOneAnt = 100
+        hpTowAnt = 100
+        
+        winTitle.text = String()
+        
+        startRandomGame()
+    }
+    
+    func startRandomGame() {
+        var s = Int.random(in: 0..<1)
+        
+        if s == 0 {
+            startAnimationHitAntOne()
+        } else if s == 1 {
+            startAnimationHitAntTwo()
+        }
+    }
     
     override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        view.addSubview(ant1)
-        ant1.snp.makeConstraints{(make) in
-            make.height.width.equalTo(100)
-            make.centerY.equalToSuperview()
-            make.right.equalToSuperview().offset(-20)
-
-        }
-        
-        view.addSubview(ant2)
-        ant2.snp.makeConstraints{(make) in
+        view.addSubview(antOne)
+        antOne.snp.makeConstraints { (make) in
             make.height.width.equalTo(100)
             make.centerY.equalToSuperview()
             make.left.equalToSuperview().offset(20)
         }
         
-        ant1.layer.add(animationOne,forKey:"animationPosition")
-        ant2.layer.add(animationOne,forKey:"animationPosition")
-
-    }
-    
-    func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
-        ant2.layer.add(animationTwo,forKey:"animationPosition")
-        ant1.layer.add(animationOne,forKey:"animationPosition")
-
-    }
-}
-
-extension UIImage {
-    func rotate(radians: CGFloat) -> UIImage {
-        let rotatedSize = CGRect(origin: .zero, size: size)
-            .applying(CGAffineTransform(rotationAngle: CGFloat(radians)))
-            .integral.size
-        UIGraphicsBeginImageContext(rotatedSize)
-        if let context = UIGraphicsGetCurrentContext() {
-            let origin = CGPoint(x: rotatedSize.width / 2.0,
-                                 y: rotatedSize.height / 2.0)
-            context.translateBy(x: origin.x, y: origin.y)
-            context.rotate(by: radians)
-            draw(in: CGRect(x: -origin.y, y: -origin.x,
-                            width: size.width, height: size.height))
-            let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-
-            return rotatedImage ?? self
+        view.addSubview(antTitleOne)
+        antTitleOne.snp.makeConstraints { (make) in
+            make.centerX.equalTo(antOne)
+            make.bottom.equalTo(antOne.snp.top).offset(-10)
+        }
+               
+        view.addSubview(repeatButton)
+        repeatButton.snp.makeConstraints { (make) in
+            make.width.height.equalTo(100)
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(50)
+        }
+        
+        view.addSubview(antTwo)
+        antTwo.snp.makeConstraints { (make) in
+            make.height.width.equalTo(100)
+            make.centerY.equalToSuperview()
+            make.right.equalToSuperview().offset(-20)
+        }
+        
+        view.addSubview(antTitleTwo)
+        antTitleTwo.snp.makeConstraints { (make) in
+            make.centerX.equalTo(antTwo)
+            make.bottom.equalTo(antOne.snp.top).offset(-10)
         }
 
-        return self
+        view.addSubview(winTitle)
+        winTitle.snp.makeConstraints { (make) in
+            make.bottom.equalToSuperview().offset(-100)
+            make.centerX.equalToSuperview()
+        }
+        
+        print("\(view.frame.width) \(view.frame.height)")
+        
+        startRandomGame()
+    }
+
+    func startAnimationHitAntOne() {
+        let theAnimation = CABasicAnimation(keyPath: "position")
+
+theAnimation.fromValue = [120.0, 568.0 / 2]
+        theAnimation.toValue = [320.0 - 120.0, 568.0 / 2]
+        theAnimation.duration = 0.3
+        theAnimation.delegate = antOneListener
+        theAnimation.autoreverses = true
+
+        antOne.layer.add(theAnimation, forKey: "animatePosition")
+    }
+    
+    func startAnimationHitAntTwo() {
+        let theAnimation = CABasicAnimation(keyPath: "position")
+
+        theAnimation.fromValue = [320.0 - 120.0, 568.0 / 2]
+        theAnimation.toValue = [120.0, 568.0 / 2]
+        theAnimation.duration = 0.3
+        theAnimation.delegate = antTwoListener
+        theAnimation.autoreverses = true
+
+        antTwo.layer.add(theAnimation, forKey: "animatePosition")
     }
 }
